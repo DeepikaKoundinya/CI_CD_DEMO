@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:java="http://www.mulesoft.org/schema/mule/java"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config"
+		doc:name="HTTP Listener config"
+		doc:id="0c0e0486-a2e3-4115-ab8f-926f55157d92">
+		<http:listener-connection host="0.0.0.0"
+			port="8081" />
+	</http:listener-config>
+	<flow name="testFlowDW"
+		doc:id="c707f21d-0481-4b8c-8988-74d2d7d10841">
+		<http:listener doc:name="Listener"
+			doc:id="a9d66189-6ad2-4b7e-9c46-ad288c0c8771"
+			config-ref="HTTP_Listener_config" path="/test" />
+		<!-- <java:invoke-static method="appendRandom(java.lang.String)" doc:id="6c0f4a76-8601-4d09-be53-4001544da164" 
+			class="com.test.randomNumber"> <java:args ><![CDATA[#[%dw 2.0 output application/json 
+			-&#45;&#45; { base : vars."var" }]]]></java:args> </java:invoke-static> -->
+		<ee:transform doc:name="Transform Message"
+			doc:id="340bba4e-6dcd-42a2-92c6-9d2bbefdee3d">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+import java!test::randomNumber
+output application/java
+---
+randomNumber::appendRandom(payload)
+
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+
+		<logger level="INFO" doc:name="Logger"
+			doc:id="42461795-5f49-40e9-b357-2402e8a9b288" message="test" />
+	</flow>
+	<flow name="InvokeStatic"
+		doc:id="d7e82b16-9609-46f0-9527-6cecb5429cab">
+		<http:listener doc:name="Copy_of_Listener"
+			doc:id="45218bba-34f3-4871-9b51-8047eba2c6f5"
+			config-ref="HTTP_Listener_config" path="/test1" />
+
+		<java:invoke-static doc:name="Invoke static"
+			doc:id="f4916c47-5892-41a6-a697-dad2322a426e"
+			class="test.randomNumber" method="appendRandom(java.lang.String)">
+			<java:args><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+	base : payload
+}]]]></java:args>
+		</java:invoke-static>
+		<logger level="INFO" doc:name="Copy_of_Logger" doc:id="cf409a41-57c3-45e4-b9fd-3e886fe85479" message="test" />
+	</flow>
+	<flow name="Invoke"
+		doc:id="ab555549-85d1-45b5-b89b-e6865104c93f">
+		<http:listener doc:name="Copy_of_Listener"
+			doc:id="653594ab-5aa7-4677-9c21-051ec9b303df"
+			config-ref="HTTP_Listener_config" path="/test2" />
+		<set-variable value="#[payload]" doc:name="Set Variable"
+			doc:id="18145fb4-604a-448f-ade4-63bcc13cd15b" variableName="v1" />
+		<java:new doc:name="New" doc:id="aa12edcc-4381-4707-a5c1-fcca34707ed6" class="test.randomNumber" constructor="randomNumber()">
+			<java:args ><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+	base : vars."v1"
+}]]]></java:args>
+
+		</java:new>
+		<java:invoke doc:name="Invoke" doc:id="0ce25bc8-8dfa-47c8-a256-f433ca609593" class="test.randomNumber" method="appendRandom1(java.lang.String)" instance="#[payload]">
+			<java:args ><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+	base : vars."v1"
+}]]]></java:args>
+		</java:invoke>
+		<logger level="INFO" doc:name="Copy_of_Logger" doc:id="b7155fc5-0ec5-43b6-8ab3-24c418c235c9" message="test" />
+	</flow>
+</mule>
