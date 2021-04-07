@@ -37,6 +37,7 @@ randomNumber::appendRandom(payload)
 			</ee:message>
 		</ee:transform>
 
+		<set-payload value="#[payload]" doc:name="Set Payload" doc:id="19321743-82c6-40e4-9542-8ddfac980c7c" />
 		<logger level="INFO" doc:name="Logger"
 			doc:id="42461795-5f49-40e9-b357-2402e8a9b288" message="test" />
 	</flow>
